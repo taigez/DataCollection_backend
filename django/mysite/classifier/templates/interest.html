@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Research Interest{% endblock %}
+
+{% block content %}
+<div class="card text-center">
+  <h5 class="card-header">Research Interest</h5>
+    <div class="card-body">
+{% for sen in int_sentences %}
+
+      <div class="card text-lg-center">
+          <div class="card-body">
+            <p class="card-text"> {{sen.body}} </p>
+            <a href="{% url 'delete_int' sen.id %}" class="btn btn-outline-danger">Delete</a>
+            <div class="btn-group">
+              <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                Move to
+              </button>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{% url 'int2edu' sen.id %}">Education Background</a></li>
+                <li><a class="dropdown-item" href="{% url 'int2awd' sen.id %}">Academic Awards</a></li>
+              </ul>
+            </div>
+          </div>
+      </div>
+
+{% endfor %}
+  </div>
+</div>
+{% endblock %}

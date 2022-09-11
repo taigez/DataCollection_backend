@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Scholar Classifier{% endblock %}
+
+
+{% block content %}
+
+<div class="card text-center">
+    <div class="card-header text-muted">
+      work in progress...
+      <a href="{% url 'testing' %}" class="btn btn-outline-primary">Testing</a>
+    </div>
+    <div class="card-body">
+      <h5 class="card-title">Hello! Welcome to Scholar Classifier!</h5>
+      <p class="card-text">Go to inputs page to start expanding the training data!</p>
+      <a href="{% url 'new' %}" class="btn btn-outline-primary">Manual Input</a>
+      <p class="card-text">Go to pending page to start validating!</p>
+      <a href="{% url 'pending' %}" class="btn btn-outline-primary position-relative">Pending Sentences
+
+        {% if num_pending %}
+          <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+            {{ num_pending }}
+          </span>
+        {% else %}
+
+        {% endif %}
+        
+      </a>
+    </div>
+  </div>
+
+
+
+<div class="card text-center">
+    <h5 class="card-header">Education Background</h5>
+    <div class="card-body">
+      <h5 class="card-title">There are currently {{num_edu_sentences}} Education Background sentences in storage.</h5>
+      <p class="card-text">50 sentences are needed to start a new training loop!</p>
+      <a href="{% url 'education' %}" class="btn btn-outline-primary">View</a>
+    </div>
+</div>
+
+
+<div class="card text-center">
+    <h5 class="card-header">Research Interest</h5>
+    <div class="card-body">
+      <h5 class="card-title">There are currently {{num_int_sentences}} Research Interest sentences in storage.</h5>
+      <p class="card-text">50 sentences are needed to start a new training loop!</p>
+      <a href="{% url 'interest' %}" class="btn btn-outline-primary">View</a>
+    </div>
+</div>
+
+<div class="card text-center">
+    <h5 class="card-header">Academic Awards</h5>
+    <div class="card-body">
+      <h5 class="card-title">There are currently {{num_awd_sentences}} Academic Awards sentences in storage.</h5>
+      <p class="card-text">50 sentences are needed to start a new training loop!</p>
+      <a href="{% url 'awards' %}" class="btn btn-outline-primary">View</a>
+    </div>
+</div>
+
+
+{% endblock %}

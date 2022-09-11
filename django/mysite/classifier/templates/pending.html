@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}Scholar Classifier{% endblock %}
+
+
+{% block content %}
+
+<div class="card text-center">
+    <div class="card-body">
+      <h5 class="card-title">There are currently {{num_pending}} Pending sentences waiting to be processed.</h5>
+      <p class="card-text">Pick the sentence that accurately describes the topic!</p>
+    </div>
+</div>
+
+
+<div class="card text-center">
+    <h5 class="card-header">Academic Awards
+      <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+        <a href="{% url 'delete_all_awd'%}" class="btn btn-outline-danger btn-sm me-md-1">Delete All</a>
+      </div>
+    </h5>
+    <div class="card-body">
+        {% for sen in temp_awd %}
+        <div class="card text-lg-center">
+            <div class="card-body">
+              <p class="card-text"> {{sen.body}} </p>
+              <a href="{% url 'save_temp_awd' sen.id %}" class="btn btn-outline-success">Save</a>
+              <a href="{% url 'delete_temp_awd' sen.id %}" class="btn btn-outline-danger">Delete</a>
+              <div class="btn-group">
+                <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                  Move to
+                </button>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="{% url 'tawd2edu' sen.id %}">Education Background</a></li>
+                  <li><a class="dropdown-item" href="{% url 'tawd2int' sen.id %}">Research Interest</a></li>
+                </ul>
+              </div>
+            </div>
+        </div>
+        {% endfor %}
+</div>
+
+
+<div class="card text-center">
+  <h5 class="card-header">Education Background
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+      <a href="{% url 'delete_all_edu'%}" class="btn btn-outline-danger btn-sm me-md-1">Delete All</a>
+    </div>
+  </h5>
+  <div class="card-body">
+      {% for sen in temp_edu %}
+      <div class="card text-lg-center">
+          <div class="card-body">
+            <p class="card-text"> {{sen.body}} </p>
+            <a href="{% url 'save_temp_edu' sen.id %}" class="btn btn-outline-success">Save</a>
+            <a href="{% url 'delete_temp_edu' sen.id %}" class="btn btn-outline-danger">Delete</a>
+            <div class="btn-group">
+              <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                Move to
+              </button>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{% url 'tedu2awd' sen.id %}">Academic Awards</a></li>
+                <li><a class="dropdown-item" href="{% url 'tedu2int' sen.id %}">Research Interest</a></li>
+              </ul>
+            </div>
+          </div>
+      </div>
+      {% endfor %}
+  </div>
+</div>
+
+
+<div class="card text-center">
+    <h5 class="card-header">Research Interest
+      <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+        <a href="{% url 'delete_all_int'%}" class="btn btn-outline-danger btn-sm me-md-1">Delete All</a>
+      </div>
+    </h5>
+    <div class="card-body">
+        {% for sen in temp_int %}
+        <div class="card text-lg-center">
+            <div class="card-body">
+              <p class="card-text"> {{sen.body}} </p>
+              <a href="{% url 'save_temp_int' sen.id %}" class="btn btn-outline-success">Save</a>
+              <a href="{% url 'delete_temp_int' sen.id %}" class="btn btn-outline-danger">Delete</a>
+              <div class="btn-group">
+                <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                  Move to
+                </button>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="{% url 'tint2edu' sen.id %}">Education Background</a></li>
+                  <li><a class="dropdown-item" href="{% url 'tint2awd' sen.id %}">Academic Awards</a></li>
+                </ul>
+              </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+
+
+
+{% endblock %}

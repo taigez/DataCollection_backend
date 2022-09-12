@@ -12,9 +12,6 @@
     </div>
     <div class="card-body">
       <h5 class="card-title">Hello! Welcome to Scholar Classifier!</h5>
-      <p class="card-text">Go to inputs page to start expanding the training data!</p>
-      <a href="{% url 'new' %}" class="btn btn-outline-primary">Manual Input</a>
-      <p class="card-text">Go to pending page to start validating!</p>
       <a href="{% url 'pending' %}" class="btn btn-outline-primary position-relative">Pending Sentences
 
         {% if num_pending %}

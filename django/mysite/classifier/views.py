@@ -10,6 +10,7 @@ from django.contrib.auth.models import User #####
 from django.http import JsonResponse , HttpResponse ####
 from django.contrib import messages
 from .models import Sentences_awd, Sentences_edu, Sentences_int, Sentences_temp_int, Sentences_temp_awd, Sentences_temp_edu, Sentences_irr_awd, Sentences_irr_edu, Sentences_irr_int
+from .models import Predicted_total_awd, Predicted_total_edu, Predicted_total_int, Correct_total_awd, Correct_total_edu, Correct_total_int, True_total_awd, True_total_edu, True_total_int
 from .form import PostRawForm
 from .classify import process_paragraph, train_awd, train_edu, train_int
 from django.views.decorators.csrf import csrf_exempt
@@ -29,6 +30,11 @@ def show_int(request):
 
 def show_awd(request):
     return render(request, "awards.html", {"awd_sentences":Sentences_awd.objects.all()})
+
+def show_irrelevant(request):
+    return render(request, "irrelevant.html", {"edu_sentences":Sentences_irr_edu.objects.all(),
+                                        "int_sentences":Sentences_irr_int.objects.all(),
+                                        "awd_sentences":Sentences_irr_awd.objects.all()})
 
 def delete_edu(request, id):
     edu_sen = get_object_or_404(Sentences_edu, pk=id)
@@ -208,24 +214,6 @@ def new(request):
         raw_form = PostRawForm()
     return render(request, "new.html", {"raw_form":raw_form})
 
-@csrf_exempt
-def handle_json(request):
-    if request.method == 'POST':
-        json_dict = json.loads(request.body)
-        input_parapgraph = json_dict['text']
-        output_dict = process_paragraph(input_parapgraph)
-        for edu_sen in output_dict["background"]:
-            new_edu = Sentences_temp_edu(body=edu_sen)
-            new_edu.save()
-
-        for awd_sen in output_dict["awards"]:
-            new_awd = Sentences_temp_awd(body=awd_sen)
-            new_awd.save()
-
-        for int_sen in output_dict["interest"]:
-            new_int = Sentences_temp_int(body=int_sen)
-            new_int.save()
-    return HttpResponse("OK")
 
 def check_training():
     if Sentences_awd.objects.count() >= 50:
@@ -257,7 +245,7 @@ def process_temp_edu(all_tempEdu, wrong_sentences):
                 elif wrong[1] == "interest":
                     new_int = Sentences_int(body=wrong[0])
                     new_int.save()
-                elif wrong[1] == "irrelevant":
+                elif wrong[1] == "none":
                     new_irr_awd = Sentences_irr_awd(body=temp)
                     new_irr_awd.save()
                     new_irr_int = Sentences_irr_int(body=temp)
@@ -270,6 +258,7 @@ def process_temp_edu(all_tempEdu, wrong_sentences):
             new_edu = Sentences_edu(body=temp)
             new_edu.save()
     
+    Sentences_temp_edu.objects.all().delete()
     return wrong_sentences
 
 def process_temp_awd(all_tempAwd, wrong_sentences):
@@ -302,6 +291,7 @@ def process_temp_awd(all_tempAwd, wrong_sentences):
             new_awd = Sentences_awd(body=temp)
             new_awd.save()
     
+    Sentences_temp_awd.objects.all().delete()
     return wrong_sentences
 
 def process_temp_int(all_tempInt, wrong_sentences):
@@ -334,19 +324,33 @@ def process_temp_int(all_tempInt, wrong_sentences):
             new_int = Sentences_int(body=temp)
             new_int.save()
     
+    Sentences_temp_int.objects.all().delete()
     return wrong_sentences
+
+def process_numbers(backPrec, intPrec, awardPrec, backRec, intRec, awardRec):
+    Precision_edu(body=backPrec).save()
+    Precision_edu(body=intPrec).save()
+    Precision_edu(body=awardPrec).save()
+    Precision_edu(body=backRec).save()
+    Precision_edu(body=intRec).save()
+    Precision_edu(body=awardRec).save()
     
 
 @csrf_exempt
 def handle_get(request):
     input_parapgraph = request.GET.get('text', None)
     input_labels = request.GET.get('data', None)
-    backPrec = request.GET.get('backPrec', None)
-    intPrec = request.GET.get('intPrec', None)
-    awardPrec = request.GET.get('awardPrec', None)
-    backRec = request.GET.get('backRec', None)
-    intRec = request.GET.get('intRec', None)
-    awardRec = request.GET.get('awardRec', None)
+    predicted_total_awd = request.GET.get('Predicted_total_awd', None)
+    predicted_total_edu = request.GET.get('Predicted_total_edu', None)
+    predicted_total_int = request.GET.get('Predicted_total_int', None)
+    correct_total_awd = request.GET.get('Correct_total_awd', None)
+    correct_total_edu = request.GET.get('Correct_total_edu', None)
+    correct_total_int = request.GET.get('Correct_total_int', None)
+    true_total_awd = request.GET.get('True_total_awd', None)
+    true_total_edu = request.GET.get('True_total_edu', None)
+    true_total_int = request.GET.get('True_total_int', None)
+    print(predicted_total_awd, predicted_total_edu, predicted_total_int, correct_total_awd, correct_total_edu, correct_total_int, true_total_awd, true_total_edu, true_total_int)
+    
     if (input_labels == None):
         # the first button, parse
         output_dict, total_sentneces = process_paragraph(input_parapgraph)
@@ -361,7 +365,7 @@ def handle_get(request):
             new_awd.save()
 
         for int_sen in output_dict['interest']:
-            new_int = Sentences_int(body=int_sen)
+            new_int = Sentences_temp_int(body=int_sen)
             new_int.save()
 
         data = {
@@ -371,7 +375,7 @@ def handle_get(request):
             'bnum' : len(output_dict['background']),
             'anum' : len(output_dict['awards']),
             'inum' : len(output_dict['interest']),
-            'totalnum' : total_sentneces,
+            'none' : total_sentneces - len(output_dict['background']) - len(output_dict['awards']) - len(output_dict['interest']),
         }
 
         return JsonResponse(data)
@@ -390,12 +394,15 @@ def handle_get(request):
             
         # TO-DO 
         # if wrong_sentences is not empty, which means that there might be new sentences or temp is mismatched
-
+        # process_numbers()
         
         data = {
-            'bacc' : bacc,
-            'aacc' : aacc,
-            'iacc' : iacc,
+            'backRec' : 0,
+            'intRec' : 0,
+            'awardRec' : 0,
+            'backPrec' : 0,
+            'intPrec' : 0,
+            'awardPrec' : 0,
         }
 
         check_training()

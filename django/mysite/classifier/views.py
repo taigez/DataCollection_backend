@@ -1,3 +1,4 @@
+from cgitb import text
 from functools import total_ordering
 from sys import prefix
 from django.shortcuts import render, redirect, get_object_or_404
@@ -11,9 +12,11 @@ from django.http import JsonResponse , HttpResponse ####
 from django.contrib import messages
 from .models import Sentences_awd, Sentences_edu, Sentences_int, Sentences_temp_int, Sentences_temp_awd, Sentences_temp_edu, Sentences_irr_awd, Sentences_irr_edu, Sentences_irr_int
 from .models import Predicted_total_awd, Predicted_total_edu, Predicted_total_int, Correct_total_awd, Correct_total_edu, Correct_total_int, True_total_awd, True_total_edu, True_total_int
+from .models import Awd_data, Edu_data, Int_data
 from .form import PostRawForm
-from .classify import process_paragraph, train_awd, train_edu, train_int
+from .classify import process_paragraph, train_awd, train_edu, train_int, get_csv
 from django.views.decorators.csrf import csrf_exempt
+import pandas as pd
 
 def show_pending(request):
     total_pending = Sentences_temp_awd.objects.count() + Sentences_temp_edu.objects.count() + Sentences_temp_int.objects.count()
@@ -327,13 +330,42 @@ def process_temp_int(all_tempInt, wrong_sentences):
     Sentences_temp_int.objects.all().delete()
     return wrong_sentences
 
-def process_numbers(backPrec, intPrec, awardPrec, backRec, intRec, awardRec):
-    Precision_edu(body=backPrec).save()
-    Precision_edu(body=intPrec).save()
-    Precision_edu(body=awardPrec).save()
-    Precision_edu(body=backRec).save()
-    Precision_edu(body=intRec).save()
-    Precision_edu(body=awardRec).save()
+def process_numbers(predicted_total_awd, predicted_total_edu, predicted_total_int, correct_total_awd, correct_total_edu, correct_total_int, true_total_awd, true_total_edu, true_total_int):
+    pta = get_object_or_404(Predicted_total_awd, pk=1)
+    pta.body += int(predicted_total_awd)
+    pta.save()
+
+    pte = get_object_or_404(Predicted_total_edu, pk=1)
+    pte.body += int(predicted_total_edu)
+    pte.save()
+
+    pti = get_object_or_404(Predicted_total_int, pk=1)
+    pti.body += int(predicted_total_int)
+    pti.save()
+
+    cta = get_object_or_404(Correct_total_awd, pk=1)
+    cta.body += int(correct_total_awd)
+    cta.save()
+
+    cte = get_object_or_404(Correct_total_edu, pk=1)
+    cte.body += int(correct_total_edu)
+    cte.save()
+
+    cti = get_object_or_404(Correct_total_int, pk=1)
+    cti.body += int(correct_total_int)
+    cti.save()
+
+    tta = get_object_or_404(True_total_awd, pk=1)
+    tta.body += int(true_total_awd)
+    tta.save()
+
+    tte = get_object_or_404(True_total_edu, pk=1)
+    tte.body += int(true_total_edu)
+    tte.save()
+
+    tti = get_object_or_404(True_total_int, pk=1)
+    tti.body += int(true_total_int)
+    tti.save()
     
 
 @csrf_exempt
@@ -349,7 +381,7 @@ def handle_get(request):
     true_total_awd = request.GET.get('True_total_awd', None)
     true_total_edu = request.GET.get('True_total_edu', None)
     true_total_int = request.GET.get('True_total_int', None)
-    print(predicted_total_awd, predicted_total_edu, predicted_total_int, correct_total_awd, correct_total_edu, correct_total_int, true_total_awd, true_total_edu, true_total_int)
+    
     
     if (input_labels == None):
         # the first button, parse
@@ -394,24 +426,31 @@ def handle_get(request):
             
         # TO-DO 
         # if wrong_sentences is not empty, which means that there might be new sentences or temp is mismatched
-        # process_numbers()
+        process_numbers(predicted_total_awd, predicted_total_edu, predicted_total_int, correct_total_awd, correct_total_edu, correct_total_int, true_total_awd, true_total_edu, true_total_int)
         
         data = {
-            'backRec' : 0,
-            'intRec' : 0,
-            'awardRec' : 0,
-            'backPrec' : 0,
-            'intPrec' : 0,
-            'awardPrec' : 0,
+            'backRec' : get_object_or_404(Predicted_total_edu, pk=1).body / get_object_or_404(True_total_edu, pk=1).body,
+            'intRec' : get_object_or_404(Predicted_total_int, pk=1).body / get_object_or_404(True_total_int, pk=1).body,
+            'awardRec' : get_object_or_404(Predicted_total_awd, pk=1).body / get_object_or_404(True_total_awd, pk=1).body,
+            'backPrec' : get_object_or_404(Predicted_total_edu, pk=1).body / get_object_or_404(Correct_total_edu, pk=1).body,
+            'intPrec' : get_object_or_404(Predicted_total_int, pk=1).body / get_object_or_404(Correct_total_int, pk=1).body,
+            'awardPrec' : get_object_or_404(Predicted_total_awd, pk=1).body / get_object_or_404(Correct_total_awd, pk=1).body,
         }
 
-        check_training()
+        #check_training()
 
         return JsonResponse(data)
 
 def testing(request):
-    if Sentences_awd.objects.count() >= 2:
-        print('creating new model')
-        train_awd([sen.body for sen in Sentences_awd.objects.all()])
-        Sentences_awd.objects.all().delete()
+    df_a, df_e, df_i = get_csv()
+
+    for index, row in df_a.iterrows():
+        Awd_data(weight=row['Weight'], label=row['Awards'], text=row['Text']).save()
+
+    for index, row in df_e.iterrows():
+        Edu_data(weight=row['Weight'], label=row['Ed'], text=row['Text']).save()
+
+    for index, row in df_i.iterrows():
+        Int_data(weight=row['Weight'], label=row['Interest'], text=row['Text']).save()
+        
     return HttpResponse("OK!")

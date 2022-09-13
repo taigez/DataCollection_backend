@@ -2,6 +2,22 @@ from django.db import models
 
 # Create your models here.
 
+class Edu_data(models.Model):
+    weight = models. IntegerField(blank=True)
+    label = models.IntegerField(blank=True)
+    text = models.TextField(blank=True)
+
+class Awd_data(models.Model):
+    weight = models. IntegerField(blank=True)
+    label = models.IntegerField(blank=True)
+    text = models.TextField(blank=True)
+
+class Int_data(models.Model):
+    weight = models. IntegerField(blank=True)
+    label = models.IntegerField(blank=True)
+    text = models.TextField(blank=True)
+    
+
 class Raw(models.Model):
     body = models.TextField(blank=True)
 

@@ -171,3 +171,9 @@ def train_int(new_sentences):
         for item in output:
             f.write(str(item) + '\n')
 
+def get_csv():
+    df_a = pd.read_csv(adata_add, encoding = "ISO-8859-1", engine='python')
+    df_e = pd.read_csv(edata_add, encoding = "ISO-8859-1", engine='python')
+    df_i = pd.read_csv(adata_add, encoding = "ISO-8859-1", engine='python')
+    return df_a, df_e, df_i
+

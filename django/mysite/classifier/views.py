@@ -475,5 +475,14 @@ def handle_get(request):
 
 def testing(request):
     
+    labels = []
+    texts = []
+    for item in Edu_data.objects.raw('SELECT * FROM "classifier_edu_data" WHERE label = 1'):
+        labels.append(1)
+        texts.append(item.text)
+    
+    d = {'Ed': labels, 'Text': texts}
+    df_related = pd.DataFrame(data=d)
+    print(df_related)
 
     return HttpResponse("OK!")

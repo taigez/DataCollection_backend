@@ -9,6 +9,7 @@ urlpatterns = [
     path('pending/', views.show_pending, name='pending'),
     path('mislabeled/', views.show_irrelevant, name='irrelevant'),
     path('performance/', views.show_performance, name='performance'),
+    
     path('delete_edu/<int:id>', views.delete_edu, name='delete_edu'),
     path('delete_temp_edu/<int:id>', views.delete_temp_edu, name='delete_temp_edu'),
     path('delete_awd/<int:id>', views.delete_awd, name='delete_awd'),

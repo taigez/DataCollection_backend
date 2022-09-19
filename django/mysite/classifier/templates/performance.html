@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Scholar Classifier{% endblock %}
+
+
+{% block content %}
+
+
+
+<div class="card text-center">
+    <h5 class="card-header">Accumulative Precision</h5>
+    <div class="card-body">
+
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Academic Awards model precision</h5>
+          <p class="card-text"> {{awardPrec}}</p>
+        </div>
+      </div>
+
+
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Education Background model precision</h5>
+          <p class="card-text">{{backPrec}}</p>
+        </div>
+      </div>
+
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Research Interest model precision</h5>
+            <p class="card-text">{{intPrec}}</p>
+          </div>
+        </div>
+    </div>
+
+</div>
+
+
+<div class="card text-center">
+    <h5 class="card-header">Accumulative Recall</h5>
+    <div class="card-body">
+
+              <div class="card">
+                <div class="card-body">
+                  <h5 class="card-title">Academic Awards model recall</h5>
+                  <p class="card-text"> {{awardRec}}</p>
+                </div>
+              </div>
+
+
+              <div class="card">
+                <div class="card-body">
+                  <h5 class="card-title">Education Background model recall</h5>
+                  <p class="card-text">{{backRec}}</p>
+                </div>
+              </div>
+
+
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title">Research Interest model recall</h5>
+                    <p class="card-text">{{intRec}}</p>
+                  </div>
+                </div>
+
+
+</div>
+
+
+
+{% endblock %}

@@ -8,12 +8,17 @@ urlpatterns = [
     path('new/', views.new, name='new'),
     path('pending/', views.show_pending, name='pending'),
     path('mislabeled/', views.show_irrelevant, name='irrelevant'),
+    path('performance/', views.show_performance, name='performance'),
     path('delete_edu/<int:id>', views.delete_edu, name='delete_edu'),
     path('delete_temp_edu/<int:id>', views.delete_temp_edu, name='delete_temp_edu'),
     path('delete_awd/<int:id>', views.delete_awd, name='delete_awd'),
     path('delete_temp_awd/<int:id>', views.delete_temp_awd, name='delete_temp_awd'),
     path('delete_int/<int:id>', views.delete_int, name='delete_int'),
-    path('delete_temp_int/<int:id>', views.delete_temp_int, name='delete_temp_int'),
+
+    path('delete_irr_edu/<int:id>', views.delete_irr_edu, name='delete_irr_edu'),
+    path('delete_irr_awd/<int:id>', views.delete_irr_awd, name='delete_irr_awd'),
+    path('delete_irr_int/<int:id>', views.delete_irr_int, name='delete_irr_int'),
+
     path('save_temp_awd/<int:id>', views.save_temp_awd, name='save_temp_awd'),
     path('save_temp_edu/<int:id>', views.save_temp_edu, name='save_temp_edu'),
     path('save_temp_int/<int:id>', views.save_temp_int, name='save_temp_int'),

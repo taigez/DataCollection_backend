@@ -17,7 +17,10 @@ from requests_html import HTMLSession
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
 
+import spacy
+
 training_round = 5
+
 
 with open('C:/Users/taige/Desktop/Research/summer2022/week8/django/mysite/classifier/resource_data/version.txt') as f:
     output = [line.strip() for line in f.readlines()]
@@ -45,30 +48,38 @@ acronyms = "([A-Z][.][A-Z][.](?:[A-Z][.])?)"
 websites = "[.](com|net|org|io|gov|edu)"
 
 
+# def split_sen(text):
+#     text = " " + text + "  "
+#     text = text.replace("\n"," ")
+#     text = re.sub(prefixes,"\\1<prd>",text)
+#     text = re.sub(websites,"<prd>\\1",text)
+#     if "Ph.D" in text: text = text.replace("Ph.D.","Ph<prd>D<prd>")
+#     text = re.sub("\s" + alphabets + "[.] "," \\1<prd> ",text)
+#     text = re.sub(acronyms+" "+starters,"\\1<stop> \\2",text)
+#     text = re.sub(alphabets + "[.]" + alphabets + "[.]" + alphabets + "[.]","\\1<prd>\\2<prd>\\3<prd>",text)
+#     text = re.sub(alphabets + "[.]" + alphabets + "[.]","\\1<prd>\\2<prd>",text)
+#     text = re.sub(" "+suffixes+"[.] "+starters," \\1<stop> \\2",text)
+#     text = re.sub(" "+suffixes+"[.]"," \\1<prd>",text)
+#     text = re.sub(" " + alphabets + "[.]"," \\1<prd>",text)
+#     if "”" in text: text = text.replace(".”","”.")
+#     if "\"" in text: text = text.replace(".\"","\".")
+#     if "!" in text: text = text.replace("!\"","\"!")
+#     if "?" in text: text = text.replace("?\"","\"?")
+#     text = text.replace(".",".<stop>")
+#     text = text.replace("?","?<stop>")
+#     text = text.replace("!","!<stop>")
+#     text = text.replace("<prd>",".")
+#     sentences = text.split("<stop>")
+#     sentences = sentences[:-1]
+#     sentences = [s.strip() for s in sentences]
+#     return sentences
+
 def split_sen(text):
-    text = " " + text + "  "
-    text = text.replace("\n"," ")
-    text = re.sub(prefixes,"\\1<prd>",text)
-    text = re.sub(websites,"<prd>\\1",text)
-    if "Ph.D" in text: text = text.replace("Ph.D.","Ph<prd>D<prd>")
-    text = re.sub("\s" + alphabets + "[.] "," \\1<prd> ",text)
-    text = re.sub(acronyms+" "+starters,"\\1<stop> \\2",text)
-    text = re.sub(alphabets + "[.]" + alphabets + "[.]" + alphabets + "[.]","\\1<prd>\\2<prd>\\3<prd>",text)
-    text = re.sub(alphabets + "[.]" + alphabets + "[.]","\\1<prd>\\2<prd>",text)
-    text = re.sub(" "+suffixes+"[.] "+starters," \\1<stop> \\2",text)
-    text = re.sub(" "+suffixes+"[.]"," \\1<prd>",text)
-    text = re.sub(" " + alphabets + "[.]"," \\1<prd>",text)
-    if "”" in text: text = text.replace(".”","”.")
-    if "\"" in text: text = text.replace(".\"","\".")
-    if "!" in text: text = text.replace("!\"","\"!")
-    if "?" in text: text = text.replace("?\"","\"?")
-    text = text.replace(".",".<stop>")
-    text = text.replace("?","?<stop>")
-    text = text.replace("!","!<stop>")
-    text = text.replace("<prd>",".")
-    sentences = text.split("<stop>")
-    sentences = sentences[:-1]
-    sentences = [s.strip() for s in sentences]
+    sentences = []
+    nlp = spacy.load("en_core_web_sm")
+    doc = nlp(text)
+    for sent in doc.sents:
+        sentences.append(sent)
     return sentences
 
 def process_paragraph(text):
@@ -174,6 +185,6 @@ def train_int(new_sentences):
 def get_csv():
     df_a = pd.read_csv(adata_add, encoding = "ISO-8859-1", engine='python')
     df_e = pd.read_csv(edata_add, encoding = "ISO-8859-1", engine='python')
-    df_i = pd.read_csv(adata_add, encoding = "ISO-8859-1", engine='python')
+    df_i = pd.read_csv(idata_add, encoding = "ISO-8859-1", engine='python')
     return df_a, df_e, df_i
 

@@ -39,6 +39,20 @@ def show_irrelevant(request):
                                         "int_sentences":Sentences_irr_int.objects.all(),
                                         "awd_sentences":Sentences_irr_awd.objects.all()})
 
+def show_performance(request):
+    backRec = get_object_or_404(True_total_edu, pk=1).body / get_object_or_404(Predicted_total_edu, pk=1).body
+    intRec = get_object_or_404(True_total_int, pk=1).body / get_object_or_404(Predicted_total_int, pk=1).body
+    awardRec = get_object_or_404(True_total_awd, pk=1).body / get_object_or_404(Predicted_total_awd, pk=1).body
+    backPrec = get_object_or_404(Correct_total_edu, pk=1).body / get_object_or_404(Predicted_total_edu, pk=1).body
+    intPrec = get_object_or_404(Correct_total_int, pk=1).body / get_object_or_404(Predicted_total_int, pk=1).body 
+    awardPrec =  get_object_or_404(Correct_total_awd, pk=1).body / get_object_or_404(Predicted_total_awd, pk=1).body
+    return render(request, "performance.html", {"backRec":backRec,
+                                                "intRec":intRec,
+                                                "awardRec":awardRec,
+                                                "backPrec":backPrec,
+                                                "intPrec":intPrec,
+                                                "awardPrec":awardPrec})
+
 def delete_edu(request, id):
     edu_sen = get_object_or_404(Sentences_edu, pk=id)
     edu_sen.delete()
@@ -56,6 +70,24 @@ def delete_awd(request, id):
     awd_sen.delete()
     
     return redirect('/classifier/awards')
+
+def delete_irr_edu(request, id):
+    edu_sen = get_object_or_404(Sentences_irr_edu, pk=id)
+    edu_sen.delete()
+    
+    return redirect('/classifier/mislabeled')
+
+def delete_irr_int(request, id):
+    int_sen = get_object_or_404(Sentences_irr_int, pk=id)
+    int_sen.delete()
+    
+    return redirect('/classifier/mislabeled')
+
+def delete_irr_awd(request, id):
+    awd_sen = get_object_or_404(Sentences_irr_awd, pk=id)
+    awd_sen.delete()
+    
+    return redirect('/classifier/mislabeled')
 
 def delete_temp_edu(request, id):
     pedu_sen = get_object_or_404(Sentences_temp_edu, pk=id)
@@ -429,12 +461,12 @@ def handle_get(request):
         process_numbers(predicted_total_awd, predicted_total_edu, predicted_total_int, correct_total_awd, correct_total_edu, correct_total_int, true_total_awd, true_total_edu, true_total_int)
         
         data = {
-            'backRec' : get_object_or_404(Predicted_total_edu, pk=1).body / get_object_or_404(True_total_edu, pk=1).body,
-            'intRec' : get_object_or_404(Predicted_total_int, pk=1).body / get_object_or_404(True_total_int, pk=1).body,
-            'awardRec' : get_object_or_404(Predicted_total_awd, pk=1).body / get_object_or_404(True_total_awd, pk=1).body,
-            'backPrec' : get_object_or_404(Predicted_total_edu, pk=1).body / get_object_or_404(Correct_total_edu, pk=1).body,
-            'intPrec' : get_object_or_404(Predicted_total_int, pk=1).body / get_object_or_404(Correct_total_int, pk=1).body,
-            'awardPrec' : get_object_or_404(Predicted_total_awd, pk=1).body / get_object_or_404(Correct_total_awd, pk=1).body,
+            'backRec' : get_object_or_404(True_total_edu, pk=1).body / get_object_or_404(Predicted_total_edu, pk=1).body,
+            'intRec' : get_object_or_404(True_total_int, pk=1).body / get_object_or_404(Predicted_total_int, pk=1).body,
+            'awardRec' : get_object_or_404(True_total_awd, pk=1).body / get_object_or_404(Predicted_total_awd, pk=1).body,
+            'backPrec' : get_object_or_404(Correct_total_edu, pk=1).body / get_object_or_404(Predicted_total_edu, pk=1).body,
+            'intPrec' : get_object_or_404(Correct_total_int, pk=1).body / get_object_or_404(Predicted_total_int, pk=1).body,
+            'awardPrec' :  get_object_or_404(Correct_total_awd, pk=1).body / get_object_or_404(Predicted_total_awd, pk=1).body,
         }
 
         #check_training()
@@ -442,15 +474,6 @@ def handle_get(request):
         return JsonResponse(data)
 
 def testing(request):
-    df_a, df_e, df_i = get_csv()
+    
 
-    for index, row in df_a.iterrows():
-        Awd_data(weight=row['Weight'], label=row['Awards'], text=row['Text']).save()
-
-    for index, row in df_e.iterrows():
-        Edu_data(weight=row['Weight'], label=row['Ed'], text=row['Text']).save()
-
-    for index, row in df_i.iterrows():
-        Int_data(weight=row['Weight'], label=row['Interest'], text=row['Text']).save()
-        
     return HttpResponse("OK!")

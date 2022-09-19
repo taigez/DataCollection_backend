@@ -19,9 +19,11 @@
         <div class="card text-lg-center">
             <div class="card-body">
               <p class="card-text"> {{sen.body}} </p>
+              <a href="{% url 'delete_irr_awd' sen.id %}" class="btn btn-outline-danger">Delete</a>
             </div>
         </div>
         {% endfor %}
+    </div>
 </div>
 
 
@@ -32,6 +34,7 @@
         <div class="card text-lg-center">
             <div class="card-body">
                 <p class="card-text"> {{sen.body}} </p>
+                <a href="{% url 'delete_irr_edu' sen.id %}" class="btn btn-outline-danger">Delete</a>
             </div>
         </div>
       {% endfor %}
@@ -46,6 +49,7 @@
         <div class="card text-lg-center">
             <div class="card-body">
                 <p class="card-text"> {{sen.body}} </p>
+                <a href="{% url 'delete_irr_int' sen.id %}" class="btn btn-outline-danger">Delete</a>
             </div>
         </div>
         {% endfor %}

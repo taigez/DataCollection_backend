@@ -5,6 +5,7 @@ urlpatterns = [
     path('education/', views.show_edu, name='education'),
     path('interest/', views.show_int, name='interest'),
     path('awards/', views.show_awd, name='awards'),
+    path('position/', views.show_pos, name='position'),
     path('new/', views.new, name='new'),
     path('pending/', views.show_pending, name='pending'),
     path('mislabeled/', views.show_irrelevant, name='irrelevant'),
@@ -15,6 +16,8 @@ urlpatterns = [
     path('delete_awd/<int:id>', views.delete_awd, name='delete_awd'),
     path('delete_temp_awd/<int:id>', views.delete_temp_awd, name='delete_temp_awd'),
     path('delete_int/<int:id>', views.delete_int, name='delete_int'),
+    path('delete_temp_awd/<int:id>', views.delete_temp_int, name='delete_temp_int'),
+    path('delete_pos/<int:id>', views.delete_pos, name='delete_pos'),
 
     path('delete_irr_edu/<int:id>', views.delete_irr_edu, name='delete_irr_edu'),
     path('delete_irr_awd/<int:id>', views.delete_irr_awd, name='delete_irr_awd'),
@@ -39,5 +42,7 @@ urlpatterns = [
     path('delete_all_edu/', views.delete_all_edu, name='delete_all_edu'),
     path('delete_all_awd/', views.delete_all_awd, name='delete_all_awd'),
     path('delete_all_int/', views.delete_all_int, name='delete_all_int'),
+
     path('testing/', views.testing, name='testing'),
+    path('reset', views.reset, name='reset'),
 ]

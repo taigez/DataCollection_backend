@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}In-charged Positions{% endblock %}
+
+{% block content %}
+<div class="card text-center">
+  <h5 class="card-header">Positions</h5>
+    <div class="card-body">
+{% for sen in pos_sentences %}
+
+      <div class="card text-lg-center">
+          <div class="card-body">
+            <p class="card-text"> {{sen.body}} </p>
+            <a href="{% url 'delete_pos' sen.id %}" class="btn btn-outline-danger">Delete</a>
+          </div>
+      </div>
+
+{% endfor %}
+  </div>
+</div>
+{% endblock %}

@@ -30,6 +30,8 @@ class Sentences_int(models.Model):
 class Sentences_awd(models.Model):
     body = models.TextField(blank=True)
 
+class Sentences_pos(models.Model):
+    body = models.TextField(blank=True)    
 class Sentences_temp_edu(models.Model):
     body = models.TextField(blank=True)
 

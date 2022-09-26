@@ -10,9 +10,9 @@ import json
 from django.contrib.auth.models import User #####
 from django.http import JsonResponse , HttpResponse ####
 from django.contrib import messages
-from .models import Sentences_awd, Sentences_edu, Sentences_int, Sentences_temp_int, Sentences_temp_awd, Sentences_temp_edu, Sentences_irr_awd, Sentences_irr_edu, Sentences_irr_int
+from .models import Sentences_awd, Sentences_edu, Sentences_int, Sentences_pos, Sentences_temp_int, Sentences_temp_awd, Sentences_temp_edu, Sentences_irr_awd, Sentences_irr_edu, Sentences_irr_int
 from .models import Predicted_total_awd, Predicted_total_edu, Predicted_total_int, Correct_total_awd, Correct_total_edu, Correct_total_int, True_total_awd, True_total_edu, True_total_int
-from .models import Awd_data, Edu_data, Int_data
+from .models import Awd_data, Edu_data, Int_data, Sentences_pos
 from .form import PostRawForm
 from .classify import process_paragraph, train_awd, train_edu, train_int, get_csv
 from django.views.decorators.csrf import csrf_exempt
@@ -33,6 +33,9 @@ def show_int(request):
 
 def show_awd(request):
     return render(request, "awards.html", {"awd_sentences":Sentences_awd.objects.all()})
+
+def show_pos(request):
+    return render(request, "position.html", {"pos_sentences":Sentences_pos.objects.all()})
 
 def show_irrelevant(request):
     return render(request, "irrelevant.html", {"edu_sentences":Sentences_irr_edu.objects.all(),
@@ -70,6 +73,12 @@ def delete_awd(request, id):
     awd_sen.delete()
     
     return redirect('/classifier/awards')
+
+def delete_pos(request, id):
+    pos_sen = get_object_or_404(Sentences_pos, pk=id)
+    pos_sen.delete()
+    
+    return redirect('/classifier/position')
 
 def delete_irr_edu(request, id):
     edu_sen = get_object_or_404(Sentences_irr_edu, pk=id)
@@ -280,6 +289,9 @@ def process_temp_edu(all_tempEdu, wrong_sentences):
                 elif wrong[1] == "interest":
                     new_int = Sentences_int(body=wrong[0])
                     new_int.save()
+                elif wrong[1] == "position":
+                    new_pos = Sentences_pos(body=wrong[0])
+                    new_pos.save()
                 elif wrong[1] == "none":
                     new_irr_awd = Sentences_irr_awd(body=temp)
                     new_irr_awd.save()
@@ -313,7 +325,10 @@ def process_temp_awd(all_tempAwd, wrong_sentences):
                 elif wrong[1] == "interest":
                     new_int = Sentences_int(body=wrong[0])
                     new_int.save()
-                elif wrong[1] == "irrelevant":
+                elif wrong[1] == "position":
+                    new_pos = Sentences_pos(body=wrong[0])
+                    new_pos.save()
+                elif wrong[1] == "none":
                     new_irr_edu = Sentences_irr_edu(body=temp)
                     new_irr_edu.save()
                     new_irr_int = Sentences_irr_int(body=temp)
@@ -346,7 +361,10 @@ def process_temp_int(all_tempInt, wrong_sentences):
                 elif wrong[1] == "awards":
                     new_awd = Sentences_awd(body=wrong[0])
                     new_awd.save()
-                elif wrong[1] == "irrelevant":
+                elif wrong[1] == "position":
+                    new_pos = Sentences_pos(body=wrong[0])
+                    new_pos.save()
+                elif wrong[1] == "none":
                     new_irr_edu = Sentences_irr_edu(body=temp)
                     new_irr_edu.save()
                     new_irr_awd = Sentences_irr_awd(body=temp)
@@ -451,7 +469,6 @@ def handle_get(request):
         all_tempAwd = [sen.body for sen in Sentences_temp_awd.objects.all()]
         all_tempInt = [sen.body for sen in Sentences_temp_int.objects.all()]
         wrong_sentences = [sen for sen in input_labels]
-
         wrong_sentences = process_temp_edu(all_tempEdu, wrong_sentences)
         wrong_sentences = process_temp_awd(all_tempAwd, wrong_sentences)
         wrong_sentences = process_temp_int(all_tempInt, wrong_sentences)
@@ -473,16 +490,60 @@ def handle_get(request):
 
         return JsonResponse(data)
 
-def testing(request):
+
+def reset(request):
+    Sentences_awd.objects.all().delete()
+    Sentences_edu.objects.all().delete()
+    Sentences_int.objects.all().delete()
+    Sentences_irr_awd.objects.all().delete()
+    Sentences_irr_edu.objects.all().delete()
+    Sentences_irr_int.objects.all().delete()
+    Sentences_temp_awd.objects.all().delete()
+    Sentences_temp_edu.objects.all().delete()
+    Sentences_temp_int.objects.all().delete()
+
+    curr = get_object_or_404(True_total_edu, pk=1)
+    curr.body = 1
+    curr.save()
+
+    curr = get_object_or_404(True_total_awd, pk=1)
+    curr.body = 1
+    curr.save()
+
+    curr = get_object_or_404(True_total_int, pk=1)
+    curr.body = 1
+    curr.save()
+
+    curr = get_object_or_404(Correct_total_edu, pk=1)
+    curr.body = 1
+    curr.save()
+
+    curr = get_object_or_404(Correct_total_awd, pk=1)
+    curr.body = 1
+    curr.save()
+
+    curr = get_object_or_404(Correct_total_int, pk=1)
+    curr.body = 1
+    curr.save()
+
+    curr = get_object_or_404(Predicted_total_awd, pk=1)
+    curr.body = 1
+    curr.save()
+
+    curr = get_object_or_404(Predicted_total_edu, pk=1)
+    curr.body = 1
+    curr.save()
+
+    curr = get_object_or_404(Predicted_total_int, pk=1)
+    curr.body = 1
+    curr.save()
     
-    labels = []
-    texts = []
-    for item in Edu_data.objects.raw('SELECT * FROM "classifier_edu_data" WHERE label = 1'):
-        labels.append(1)
-        texts.append(item.text)
-    
-    d = {'Ed': labels, 'Text': texts}
-    df_related = pd.DataFrame(data=d)
-    print(df_related)
+
 
     return HttpResponse("OK!")
+    
+def testing(request):
+
+
+    return HttpResponse("OK!")
+

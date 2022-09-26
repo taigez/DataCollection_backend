@@ -43,46 +43,13 @@ awards_model = keras.models.load_model(amodel_add, custom_objects={'KerasLayer':
 edu_model =  keras.models.load_model(emodel_add, custom_objects={'KerasLayer':hub.KerasLayer})
 interest_model = keras.models.load_model(imodel_add, custom_objects={'KerasLayer':hub.KerasLayer})
 
-alphabets= "([A-Za-z])"
-prefixes = "(Mr|St|Mrs|Ms|Dr|Prof)[.]"
-suffixes = "(Inc|Ltd|Jr|Sr|Co)"
-starters = "(Mr|Mrs|Ms|Dr|He\s|She\s|It\s|They\s|Their\s|Our\s|We\s|But\s|However\s|That\s|This\s|Wherever)"
-acronyms = "([A-Z][.][A-Z][.](?:[A-Z][.])?)"
-websites = "[.](com|net|org|io|gov|edu)"
-
-
-# def split_sen(text):
-#     text = " " + text + "  "
-#     text = text.replace("\n"," ")
-#     text = re.sub(prefixes,"\\1<prd>",text)
-#     text = re.sub(websites,"<prd>\\1",text)
-#     if "Ph.D" in text: text = text.replace("Ph.D.","Ph<prd>D<prd>")
-#     text = re.sub("\s" + alphabets + "[.] "," \\1<prd> ",text)
-#     text = re.sub(acronyms+" "+starters,"\\1<stop> \\2",text)
-#     text = re.sub(alphabets + "[.]" + alphabets + "[.]" + alphabets + "[.]","\\1<prd>\\2<prd>\\3<prd>",text)
-#     text = re.sub(alphabets + "[.]" + alphabets + "[.]","\\1<prd>\\2<prd>",text)
-#     text = re.sub(" "+suffixes+"[.] "+starters," \\1<stop> \\2",text)
-#     text = re.sub(" "+suffixes+"[.]"," \\1<prd>",text)
-#     text = re.sub(" " + alphabets + "[.]"," \\1<prd>",text)
-#     if "”" in text: text = text.replace(".”","”.")
-#     if "\"" in text: text = text.replace(".\"","\".")
-#     if "!" in text: text = text.replace("!\"","\"!")
-#     if "?" in text: text = text.replace("?\"","\"?")
-#     text = text.replace(".",".<stop>")
-#     text = text.replace("?","?<stop>")
-#     text = text.replace("!","!<stop>")
-#     text = text.replace("<prd>",".")
-#     sentences = text.split("<stop>")
-#     sentences = sentences[:-1]
-#     sentences = [s.strip() for s in sentences]
-#     return sentences
 
 def split_sen(text):
     sentences = []
     nlp = spacy.load("en_core_web_sm")
     doc = nlp(text)
     for sent in doc.sents:
-        sentences.append(sent)
+        sentences.append(sent.text)
     return sentences
 
 def process_paragraph(text):
@@ -93,6 +60,8 @@ def process_paragraph(text):
 
     sens = split_sen(text)
     for sen in sens:
+        sen = sen.replace('\xa0', ' ')
+        sen = sen.replace('\u00a0', ' ')
         if edu_model.predict([sen])[0][0] > 0.5:
             background.append(sen)
         
@@ -110,54 +79,59 @@ def process_paragraph(text):
 
 def train_awd(new_sentences):
     global awards_ver, output
-    df = pd.read_csv(adata_add, encoding = "ISO-8859-1", engine='python')
 
-    for sen in new_sentences:
-        df.loc[len(df.index)] = [1, sen] 
+    # store related 
+    for sen in Sentences_awd.objects.all():
+        new_awd_data = Awd_data(weight=0, label=1, text=sen.body)
+        new_awd_data.save()
 
-    df_related = df[df["Awards"] == 1]
-    df_unrelated = df[df["Awards"] == 0]
-    df_down = df_unrelated.sample(df_related.shape[0])
-    df_balanced = pd.concat([df_down, df_related])
+    #store unrelated
+    for sen in Sentences_irr_awd.objects.all():
+        new_awd_data = Awd_data(weight=1, label=0, text=sen.body)
+        new_awd_data.save()
+
+    related_l = []
+    related_t = []
+    unrelated_wl = []
+    unrelated_wt = []
+    unrelated_l = []
+    unrelated_t = []
+    for item in Awd_data.objects.raw('SELECT * FROM "classifier_awd_data"'):
+        if item.label == 1:
+            related_l.append(1)
+            related_t.append(item.text)
+        elif item.weight == 1:
+            unrelated_wl.append(0)
+            unrelated_wt.append(item.text)
+        else:
+            unrelated_l.append(0)
+            unrelated_t.append(item.text)
+    
+    related = {'Awards': related_l, 'Text': related_t}
+    unrelated_w = {'Awards': unrelated_wl, 'Text': unrelated_wt}
+    unrelated = {'Awards': unrelated_l, 'Text': unrelated_t}
+    df_related = pd.DataFrame(data=related)
+    df_unrelated = pd.DataFrame(data=unrelated)
+    df_unrelated_w = pd.DataFrame(data=unrelated_w)
+
+    if df_unrelated_w.shape[0] < df_related.shape[0]:
+        df_down = df_unrelated.sample(df_related.shape[0] - df_unrelated_w.shape[0])
+        df_unrelated_w = pd.concat([df_down, df_unrelated_w])
+
+    df_balanced = pd.concat([df_unrelated_w, df_related])
+
     X_train, X_test, y_train, y_test = train_test_split(df_balanced['Text'], df_balanced['Awards'], stratify=df_balanced['Awards'])
     
     awards_model.save('C:/Users/taige/Desktop/Research/summer2022/week8/django/mysite/classifier/resource_data/backups/amodel_' + awards_ver + '.h5')
     awards_model.fit(X_train, y_train, epochs=training_round)
     awards_ver = (str)((int)(awards_ver) + 1)
     awards_model.save('C:/Users/taige/Desktop/Research/summer2022/week8/django/mysite/classifier/resource_data/amodel_' + awards_ver + '.h5')
-
-    df.to_csv('C:/Users/taige/Desktop/Research/summer2022/week8/django/mysite/classifier/resource_data/adata_' + awards_ver + '.csv')
     
     output[2] = awards_ver
     with open('C:/Users/taige/Desktop/Research/summer2022/week8/django/mysite/classifier/resource_data/version.txt', "w") as f:
         for item in output:
             f.write(str(item) + '\n')
 
-
-# def train_edu(new_sentences):
-#     global edu_ver, output
-#     df = pd.read_csv(edata_add, encoding = "ISO-8859-1", engine='python')
-
-#     for sen in new_sentences:
-#         df.loc[len(df.index)] = [1, sen] 
-
-#     df_related = df[df["Ed"] == 1]
-#     df_unrelated = df[df["Ed"] == 0] 
-#     df_down = df_unrelated.sample(df_related.shape[0])
-#     df_balanced = pd.concat([df_down, df_related])
-#     X_train, X_test, y_train, y_test = train_test_split(df_balanced['Text'], df_balanced['Ed'], stratify=df_balanced['Ed'])
-    
-#     edu_model.save('C:/Users/taige/Desktop/Research/summer2022/week8/django/mysite/classifier/resource_data/backups/emodel_' + edu_ver + '.h5')
-#     edu_model.fit(X_train, y_train, epochs=training_round)
-#     edu_ver = (str)((int)(edu_ver) + 1)
-#     edu_model.save('C:/Users/taige/Desktop/Research/summer2022/week8/django/mysite/classifier/resource_data/emodel_' + edu_ver + '.h5')
-
-#     df.to_csv('C:/Users/taige/Desktop/Research/summer2022/week8/django/mysite/classifier/resource_data/edata_' + edu_ver + '.csv')
-    
-#     output[5] = edu_ver
-#     with open('C:/Users/taige/Desktop/Research/summer2022/week8/django/mysite/classifier/resource_data/version.txt', "w") as f:
-#         for item in output:
-#             f.write(str(item) + '\n')
 
 def train_edu():
     global edu_ver, output
@@ -201,14 +175,13 @@ def train_edu():
         df_unrelated_w = pd.concat([df_down, df_unrelated_w])
 
     df_balanced = pd.concat([df_unrelated_w, df_related])
+
     X_train, X_test, y_train, y_test = train_test_split(df_balanced['Text'], df_balanced['Ed'], stratify=df_balanced['Ed'])
     
     edu_model.save('C:/Users/taige/Desktop/Research/summer2022/week8/django/mysite/classifier/resource_data/backups/emodel_' + edu_ver + '.h5')
     edu_model.fit(X_train, y_train, epochs=training_round)
     edu_ver = (str)((int)(edu_ver) + 1)
     edu_model.save('C:/Users/taige/Desktop/Research/summer2022/week8/django/mysite/classifier/resource_data/emodel_' + edu_ver + '.h5')
-
-    df.to_csv('C:/Users/taige/Desktop/Research/summer2022/week8/django/mysite/classifier/resource_data/edata_' + edu_ver + '.csv')
     
     output[5] = edu_ver
     with open('C:/Users/taige/Desktop/Research/summer2022/week8/django/mysite/classifier/resource_data/version.txt', "w") as f:
@@ -217,23 +190,53 @@ def train_edu():
 
 def train_int(new_sentences):
     global interest_ver, output
-    df = pd.read_csv(adata_add, encoding = "ISO-8859-1", engine='python')
 
-    for sen in new_sentences:
-        df.loc[len(df.index)] = [1, sen] 
+    # store related 
+    for sen in Sentences_int.objects.all():
+        new_int_data = Int_data(weight=0, label=1, text=sen.body)
+        new_int_data.save()
 
-    df_related = df[df['Interest'] == 1]
-    df_unrelated = df[df['Interest'] == 0]
-    df_down = df_unrelated.sample(df_related.shape[0])
-    df_balanced = pd.concat([df_down, df_related])
+    #store unrelated
+    for sen in Sentences_irr_int.objects.all():
+        new_int_data = Int_data(weight=1, label=0, text=sen.body)
+        new_int_data.save()
+
+    related_l = []
+    related_t = []
+    unrelated_wl = []
+    unrelated_wt = []
+    unrelated_l = []
+    unrelated_t = []
+    for item in Int_data.objects.raw('SELECT * FROM "classifier_int_data"'):
+        if item.label == 1:
+            related_l.append(1)
+            related_t.append(item.text)
+        elif item.weight == 1:
+            unrelated_wl.append(0)
+            unrelated_wt.append(item.text)
+        else:
+            unrelated_l.append(0)
+            unrelated_t.append(item.text)
+    
+    related = {'Interest': related_l, 'Text': related_t}
+    unrelated_w = {'Interest': unrelated_wl, 'Text': unrelated_wt}
+    unrelated = {'Interest': unrelated_l, 'Text': unrelated_t}
+    df_related = pd.DataFrame(data=related)
+    df_unrelated = pd.DataFrame(data=unrelated)
+    df_unrelated_w = pd.DataFrame(data=unrelated_w)
+
+    if df_unrelated_w.shape[0] < df_related.shape[0]:
+        df_down = df_unrelated.sample(df_related.shape[0] - df_unrelated_w.shape[0])
+        df_unrelated_w = pd.concat([df_down, df_unrelated_w])
+
+    df_balanced = pd.concat([df_unrelated_w, df_related])
+
     X_train, X_test, y_train, y_test = train_test_split(df_balanced['Text'], df_balanced['Interest'], stratify=df_balanced['Interest'])
     
     interest_model.save('C:/Users/taige/Desktop/Research/summer2022/week8/django/mysite/classifier/resource_data/backups/imodel_' + interest_ver + '.h5')
     interest_model.fit(X_train, y_train, epochs=training_round)
     interest_ver = (str)((int)(interest_ver) + 1)
     interest_model.save('C:/Users/taige/Desktop/Research/summer2022/week8/django/mysite/classifier/resource_data/imodel_' + interest_ver + '.h5')
-
-    df.to_csv('C:/Users/taige/Desktop/Research/summer2022/week8/django/mysite/classifier/resource_data/idata_' + interest_ver + '.csv')
     
     output[8] = interest_ver
     with open('C:/Users/taige/Desktop/Research/summer2022/week8/django/mysite/classifier/resource_data/version.txt', "w") as f:

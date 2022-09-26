@@ -544,6 +544,5 @@ def reset(request):
     
 def testing(request):
 
-
     return HttpResponse("OK!")
 

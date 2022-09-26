@@ -1,5 +1,6 @@
 from cProfile import label
 import re
+import os
 import pandas as pd
 import tensorflow as tf
 import tensorflow_hub as hub
@@ -22,7 +23,7 @@ from .models import Sentences_awd, Sentences_edu, Sentences_int, Sentences_temp_
 
 import spacy
 
-training_round = 5
+training_round = 100
 
 
 with open('C:/Users/taige/Desktop/Research/summer2022/week8/django/mysite/classifier/resource_data/version.txt') as f:
@@ -77,18 +78,20 @@ def process_paragraph(text):
 
     return final_dict, len(sens)
 
-def train_awd(new_sentences):
+def train_awd():
     global awards_ver, output
 
     # store related 
     for sen in Sentences_awd.objects.all():
         new_awd_data = Awd_data(weight=0, label=1, text=sen.body)
         new_awd_data.save()
+    Sentences_awd.objects.all().delete()
 
     #store unrelated
     for sen in Sentences_irr_awd.objects.all():
         new_awd_data = Awd_data(weight=1, label=0, text=sen.body)
         new_awd_data.save()
+    Sentences_irr_awd.objects.all().delete()
 
     related_l = []
     related_t = []
@@ -124,6 +127,7 @@ def train_awd(new_sentences):
     
     awards_model.save('C:/Users/taige/Desktop/Research/summer2022/week8/django/mysite/classifier/resource_data/backups/amodel_' + awards_ver + '.h5')
     awards_model.fit(X_train, y_train, epochs=training_round)
+    os.remove('C:/Users/taige/Desktop/Research/summer2022/week8/django/mysite/classifier/resource_data/amodel_' + awards_ver + '.h5')
     awards_ver = (str)((int)(awards_ver) + 1)
     awards_model.save('C:/Users/taige/Desktop/Research/summer2022/week8/django/mysite/classifier/resource_data/amodel_' + awards_ver + '.h5')
     
@@ -140,11 +144,13 @@ def train_edu():
     for sen in Sentences_edu.objects.all():
         new_edu_data = Edu_data(weight=0, label=1, text=sen.body)
         new_edu_data.save()
+    Sentences_edu.objects.all().delete()
 
     #store unrelated
     for sen in Sentences_irr_edu.objects.all():
         new_edu_data = Edu_data(weight=1, label=0, text=sen.body)
         new_edu_data.save()
+    Sentences_irr_edu.objects.all().delete()
 
     related_l = []
     related_t = []
@@ -180,6 +186,7 @@ def train_edu():
     
     edu_model.save('C:/Users/taige/Desktop/Research/summer2022/week8/django/mysite/classifier/resource_data/backups/emodel_' + edu_ver + '.h5')
     edu_model.fit(X_train, y_train, epochs=training_round)
+    os.remove('C:/Users/taige/Desktop/Research/summer2022/week8/django/mysite/classifier/resource_data/emodel_' + edu_ver + '.h5')
     edu_ver = (str)((int)(edu_ver) + 1)
     edu_model.save('C:/Users/taige/Desktop/Research/summer2022/week8/django/mysite/classifier/resource_data/emodel_' + edu_ver + '.h5')
     
@@ -188,18 +195,20 @@ def train_edu():
         for item in output:
             f.write(str(item) + '\n')
 
-def train_int(new_sentences):
+def train_int():
     global interest_ver, output
 
     # store related 
     for sen in Sentences_int.objects.all():
         new_int_data = Int_data(weight=0, label=1, text=sen.body)
         new_int_data.save()
+    Sentences_int.objects.all().delete()
 
     #store unrelated
     for sen in Sentences_irr_int.objects.all():
         new_int_data = Int_data(weight=1, label=0, text=sen.body)
         new_int_data.save()
+    Sentences_irr_int.objects.all().delete()
 
     related_l = []
     related_t = []
@@ -235,6 +244,7 @@ def train_int(new_sentences):
     
     interest_model.save('C:/Users/taige/Desktop/Research/summer2022/week8/django/mysite/classifier/resource_data/backups/imodel_' + interest_ver + '.h5')
     interest_model.fit(X_train, y_train, epochs=training_round)
+    os.remove('C:/Users/taige/Desktop/Research/summer2022/week8/django/mysite/classifier/resource_data/imodel_' + interest_ver + '.h5')
     interest_ver = (str)((int)(interest_ver) + 1)
     interest_model.save('C:/Users/taige/Desktop/Research/summer2022/week8/django/mysite/classifier/resource_data/imodel_' + interest_ver + '.h5')
     

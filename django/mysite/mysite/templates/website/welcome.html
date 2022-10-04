@@ -58,5 +58,12 @@
     </div>
 </div>
 
+<div class="card text-center">
+  <h5 class="card-header">Position</h5>
+  <div class="card-body">
+    <h5 class="card-title">There are currently {{num_pos_sentences}} position sentences in storage.</h5>
+    <a href="{% url 'position' %}" class="btn btn-outline-primary">View</a>
+  </div>
+</div>
 
 {% endblock %}

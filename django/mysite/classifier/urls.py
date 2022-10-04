@@ -7,6 +7,7 @@ urlpatterns = [
     path('awards/', views.show_awd, name='awards'),
     path('position/', views.show_pos, name='position'),
     path('new/', views.new, name='new'),
+    path('reset_raw', views.reset_raw, name='reset_raw'),
     path('pending/', views.show_pending, name='pending'),
     path('mislabeled/', views.show_irrelevant, name='irrelevant'),
     path('performance/', views.show_performance, name='performance'),
@@ -16,7 +17,7 @@ urlpatterns = [
     path('delete_awd/<int:id>', views.delete_awd, name='delete_awd'),
     path('delete_temp_awd/<int:id>', views.delete_temp_awd, name='delete_temp_awd'),
     path('delete_int/<int:id>', views.delete_int, name='delete_int'),
-    path('delete_temp_awd/<int:id>', views.delete_temp_int, name='delete_temp_int'),
+    path('delete_temp_int/<int:id>', views.delete_temp_int, name='delete_temp_int'),
     path('delete_pos/<int:id>', views.delete_pos, name='delete_pos'),
 
     path('delete_irr_edu/<int:id>', views.delete_irr_edu, name='delete_irr_edu'),

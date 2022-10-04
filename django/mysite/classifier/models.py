@@ -21,6 +21,15 @@ class Int_data(models.Model):
 class Raw(models.Model):
     body = models.TextField(blank=True)
 
+class RawA(models.Model):
+    body = models.TextField(blank=True)
+
+class RawE(models.Model):
+    body = models.TextField(blank=True)
+
+class RawI(models.Model):
+    body = models.TextField(blank=True)
+
 class Sentences_edu(models.Model):
     body = models.TextField(blank=True)
 

@@ -12,9 +12,9 @@ from django.http import JsonResponse , HttpResponse ####
 from django.contrib import messages
 from .models import Sentences_awd, Sentences_edu, Sentences_int, Sentences_pos, Sentences_temp_int, Sentences_temp_awd, Sentences_temp_edu, Sentences_irr_awd, Sentences_irr_edu, Sentences_irr_int
 from .models import Predicted_total_awd, Predicted_total_edu, Predicted_total_int, Correct_total_awd, Correct_total_edu, Correct_total_int, True_total_awd, True_total_edu, True_total_int
-from .models import Awd_data, Edu_data, Int_data, Sentences_pos
+from .models import Awd_data, Edu_data, Int_data, Sentences_pos, RawI, RawA, RawE
 from .form import PostRawForm
-from .classify import process_paragraph, train_awd, train_edu, train_int, get_csv
+from .classify import process_paragraph, train_awd, train_edu, train_int, get_csv, scrape_google, summarize_text
 from django.views.decorators.csrf import csrf_exempt
 import pandas as pd
 
@@ -42,6 +42,29 @@ def show_irrelevant(request):
                                         "int_sentences":Sentences_irr_int.objects.all(),
                                         "awd_sentences":Sentences_irr_awd.objects.all()})
 
+def new(request):
+    if request.method == 'POST':
+        raw_form = PostRawForm(request.POST)
+        if raw_form.is_valid():
+            obj = raw_form.save(commit=False)
+            name = obj.body
+            links = scrape_google(name)
+            # links = links[:2]
+            summarize_text(links)
+            return redirect('/classifier/new/')
+    else:
+        raw_form = PostRawForm()
+    return render(request, "new.html", {"raw_form":raw_form,
+                                        "awd":RawA.objects.all(),
+                                        "edu":RawE.objects.all(),
+                                        "int":RawI.objects.all()})
+
+def reset_raw(request):
+    RawA.objects.all().delete()
+    RawE.objects.all().delete()
+    RawI.objects.all().delete()
+    return redirect('/classifier/new')
+
 def show_performance(request):
     backRec = get_object_or_404(True_total_edu, pk=1).body / get_object_or_404(Predicted_total_edu, pk=1).body
     intRec = get_object_or_404(True_total_int, pk=1).body / get_object_or_404(Predicted_total_int, pk=1).body
@@ -55,6 +78,7 @@ def show_performance(request):
                                                 "backPrec":backPrec,
                                                 "intPrec":intPrec,
                                                 "awardPrec":awardPrec})
+
 
 def delete_edu(request, id):
     edu_sen = get_object_or_404(Sentences_edu, pk=id)
@@ -235,28 +259,7 @@ def awd2int(request, id):
     awd_sen.delete()
     return redirect('/classifier/awards')
 
-def new(request):
-    if request.method == 'POST':
-        raw_form = PostRawForm(request.POST)
-        if raw_form.is_valid():
-            obj = raw_form.save(commit=False)
-            input_parapgraph = obj.body
-            output_dict = process_paragraph(input_parapgraph)
-            for edu_sen in output_dict["background"]:
-                new_edu = Sentences_temp_edu(body=edu_sen)
-                new_edu.save()
 
-            for awd_sen in output_dict["awards"]:
-                new_awd = Sentences_temp_awd(body=awd_sen)
-                new_awd.save()
-
-            for int_sen in output_dict["interest"]:
-                new_int = Sentences_temp_int(body=int_sen)
-                new_int.save()
-            return redirect('/classifier/new/')
-    else:
-        raw_form = PostRawForm()
-    return render(request, "new.html", {"raw_form":raw_form})
 
 
 def check_training():
@@ -475,6 +478,20 @@ def handle_get(request):
             
         # TO-DO 
         # if wrong_sentences is not empty, which means that there might be new sentences or temp is mismatched
+        for wrong in wrong_sentences:
+            if wrong[1] == "background":
+                new_edu = Sentences_edu(body=wrong[0])
+                new_edu.save()
+            elif wrong[1] == "awards":
+                new_awd = Sentences_awd(body=wrong[0])
+                new_awd.save()
+            elif wrong[1] == "position":
+                new_pos = Sentences_pos(body=wrong[0])
+                new_pos.save()
+            elif wrong[1] == "interest":
+                new_int = Sentences_int(body=wrong[0])
+                new_int.save()
+
         process_numbers(predicted_total_awd, predicted_total_edu, predicted_total_int, correct_total_awd, correct_total_edu, correct_total_int, true_total_awd, true_total_edu, true_total_int)
         
         data = {
@@ -543,6 +560,8 @@ def reset(request):
     return HttpResponse("OK!")
     
 def testing(request):
+
+    train_edu()
 
     return HttpResponse("OK!")
 

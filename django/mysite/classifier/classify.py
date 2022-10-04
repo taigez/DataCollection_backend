@@ -18,7 +18,7 @@ from requests_html import HTML
 from requests_html import HTMLSession
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
-from .models import Awd_data, Edu_data, Int_data
+from .models import Awd_data, Edu_data, Int_data, RawA, RawE, RawI
 from .models import Sentences_awd, Sentences_edu, Sentences_int, Sentences_temp_int, Sentences_temp_awd, Sentences_temp_edu, Sentences_irr_awd, Sentences_irr_edu, Sentences_irr_int
 
 import spacy
@@ -35,19 +35,96 @@ interest_ver = output[8]
 
 amodel_add = output[0] + awards_ver + '.h5'
 adata_add = output[1] + awards_ver + '.csv'
-emodel_add = output[3] + awards_ver + '.h5'
-edata_add = output[4] + awards_ver + '.csv'
-imodel_add = output[6] + awards_ver + '.h5'
-idata_add = output[7] + awards_ver + '.csv'
+emodel_add = output[3] + edu_ver + '.h5'
+edata_add = output[4] + edu_ver + '.csv'
+imodel_add = output[6] + interest_ver + '.h5'
+idata_add = output[7] + interest_ver + '.csv'
 
 awards_model = keras.models.load_model(amodel_add, custom_objects={'KerasLayer':hub.KerasLayer})
 edu_model =  keras.models.load_model(emodel_add, custom_objects={'KerasLayer':hub.KerasLayer})
 interest_model = keras.models.load_model(imodel_add, custom_objects={'KerasLayer':hub.KerasLayer})
 
+def get_source(url):
+    try:
+        session = HTMLSession()
+        response = session.get(url)
+        return response
+
+    except requests.exceptions.RequestException as e:
+        print(e)
+
+def scrape_google(query):
+
+    query = urllib.parse.quote_plus(query)
+    response = get_source("https://www.google.com/search?q=" + query)
+
+    links = list(response.html.absolute_links)
+    google_domains = ('https://www.google.', 
+                      'https://google.', 
+                      'https://webcache.googleusercontent.', 
+                      'http://webcache.googleusercontent.', 
+                      'https://policies.google.',
+                      'https://support.google.',
+                      'https://maps.google.')
+
+    for url in links[:]:
+        # remove google domains
+        if url.startswith(google_domains):
+            links.remove(url)
+
+        # remove non edu links
+        elif "edu" not in url:
+            links.remove(url)
+            
+    return links
+
+def read_from_link(url):
+    html = urlopen(url).read()
+    soup = BeautifulSoup(html, features="html.parser")
+
+    # kill all script and style elements
+    for script in soup(["script", "style"]):
+        script.extract()    # rip it out
+
+    # get text
+    text = soup.body.get_text()
+
+    # break into lines and remove leading and trailing space on each
+    lines = (line.strip() for line in text.splitlines())
+    
+    # break multi-headlines into a line each
+    chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+    
+    # drop blank lines
+    full_text = '\n'.join(chunk for chunk in chunks if chunk)
+    
+    # print(full_text)
+    return full_text
+
+def summarize_text(links):
+    for link in links:
+        print(link)
+        full_text = read_from_link(link)
+        sens = split_sen(full_text)
+        for sen in sens:
+            sen = sen.replace('\xa0', ' ')
+            sen = sen.replace('\u00a0', ' ')
+            if edu_model.predict([sen])[0][0] > 0.5:
+                new_edu = RawE(body=sen)
+                new_edu.save()
+            
+            if interest_model.predict([sen])[0][0] > 0.5:
+                new_int = RawI(body=sen)
+                new_int.save()
+            
+            if awards_model.predict([sen])[0][0] > 0.5:
+                new_awd = RawA(body=sen)
+                new_awd.save()
+
 
 def split_sen(text):
     sentences = []
-    nlp = spacy.load("en_core_web_sm")
+    nlp = spacy.load("en_core_web_lg")
     doc = nlp(text)
     for sent in doc.sents:
         sentences.append(sent.text)

@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Scholar Classifier{% endblock %}
+
+
+{% block content %}
+
+
+<div class="card text-center">
+    <!-- <form>
+        <div class="mb-3">
+          <label for="name" class="form-label">Input name</label>
+          <input class="form-control" id="name" aria-describedby="nameHelp">
+          <div id="nameHelp" class="form-text">Input Scholar's name.</div>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+      </form> -->
+
+    <form method="post">
+
+      {{ raw_form }}
+
+      {% csrf_token %}
+      <button type="submit">Create</button>
+    </form>
+    <a href="{% url 'reset_raw' %}" class="btn btn-outline-warning">Reset ALL</a>
+</div>
+
+<div class="card text-center">
+  <h5 class="card-header">Academic Awards</h5>
+    <div class="card-body">
+{% for sen in awd %}
+
+      <div class="card text-lg-center">
+          <div class="card-body">
+            <p class="card-text"> {{sen.body}} </p>
+          </div>
+      </div>
+
+{% endfor %}
+  </div>
+</div>
+
+<div class="card text-center">
+  <h5 class="card-header">Education Background</h5>
+    <div class="card-body">
+{% for sen in edu %}
+
+      <div class="card text-lg-center">
+          <div class="card-body">
+            <p class="card-text"> {{sen.body}} </p>
+          </div>
+      </div>
+
+{% endfor %}
+  </div>
+</div>
+
+
+<div class="card text-center">
+  <h5 class="card-header">Research Interest</h5>
+    <div class="card-body">
+{% for sen in int %}
+
+      <div class="card text-lg-center">
+          <div class="card-body">
+            <p class="card-text"> {{sen.body}} </p>
+          </div>
+      </div>
+
+{% endfor %}
+  </div>
+</div>
+
+
+
+
+
+
+{% endblock %}
